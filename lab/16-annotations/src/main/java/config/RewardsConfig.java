@@ -1,8 +1,10 @@
 package config;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import javax.sql.DataSource;
+
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+
 import rewards.RewardNetwork;
 import rewards.internal.RewardNetworkImpl;
 import rewards.internal.account.AccountRepository;
@@ -12,54 +14,51 @@ import rewards.internal.restaurant.RestaurantRepository;
 import rewards.internal.reward.JdbcRewardRepository;
 import rewards.internal.reward.RewardRepository;
 
-import javax.sql.DataSource;
-
 /**
- * TODO-07: Perform component-scanning and run the test again
- * - Add an appropriate annotation to this class to cause component scanning.
- * - Set the base package to pick up all the classes we have annotated so far.
- * - Save all changes, Re-run the RewardNetworkTests.  It should now pass.
+ * TODO-07: Perform component-scanning and run the test again - Add an
+ * appropriate annotation to this class to cause component scanning. - Set the
+ * base package to pick up all the classes we have annotated so far. - Save all
+ * changes, Re-run the RewardNetworkTests. It should now pass.
  */
 @Configuration
+@ComponentScan("rewards.internal")
 public class RewardsConfig {
 
 	DataSource dataSource;
 
-	@Autowired
-	public RewardsConfig(DataSource dataSource) {
+	//@Autowired
+	RewardsConfig(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
-		
-	@Bean
-	public RewardNetwork rewardNetwork(){
-		return new RewardNetworkImpl(
-			accountRepository(), 
-			restaurantRepository(), 
-			rewardRepository());
+
+	//@Bean
+	RewardNetwork rewardNetwork() {
+		return new RewardNetworkImpl(accountRepository(), restaurantRepository(), rewardRepository());
 	}
-	
-	@Bean
-	public AccountRepository accountRepository(){
+
+	//@Bean
+	AccountRepository accountRepository() {
 		JdbcAccountRepository repository = new JdbcAccountRepository();
 		repository.setDataSource(dataSource);
 		return repository;
 	}
-	
-	@Bean
-	public RestaurantRepository restaurantRepository(){
-		JdbcRestaurantRepository repository = new JdbcRestaurantRepository(dataSource);
+
+	//@Bean
+	RestaurantRepository restaurantRepository() {
+		JdbcRestaurantRepository repository = new JdbcRestaurantRepository();
+		//repository.setDataSource(dataSource);
 		return repository;
 	}
-	
-	@Bean
-	public RewardRepository rewardRepository(){
+
+	//@Bean
+	RewardRepository rewardRepository() {
 		JdbcRewardRepository repository = new JdbcRewardRepository();
 		repository.setDataSource(dataSource);
 		return repository;
 	}
-	
+
 	// TODO-02: Remove all of the @Bean methods above.
 	// - Remove the code that autowires DataSource as well.
-    // - Run the RewardNetworkTests test. It should fail. Why?
-	
+	// - Run the RewardNetworkTests test. It should fail. Why?
+
 }

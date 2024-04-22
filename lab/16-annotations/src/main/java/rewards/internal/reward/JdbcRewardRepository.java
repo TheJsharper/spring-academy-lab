@@ -6,6 +6,10 @@ import rewards.Dining;
 import rewards.RewardConfirmation;
 
 import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import java.sql.*;
 
 /**
@@ -20,9 +24,10 @@ import java.sql.*;
  * - Inject dataSource by annotating setDataSource() method
  *   with @Autowired.
  */
-
+@Repository
 public class JdbcRewardRepository implements RewardRepository {
 
+	@Autowired
 	private DataSource dataSource;
 
 	/**

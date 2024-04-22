@@ -2,7 +2,10 @@ package rewards.internal.account;
 
 import common.money.MonetaryAmount;
 import common.money.Percentage;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,9 +23,10 @@ import java.sql.SQLException;
  * - Inject dataSource by annotating setDataSource() method
  *   with @Autowired.
  */
-
+@Repository
 public class JdbcAccountRepository implements AccountRepository {
 
+	@Autowired 
 	private DataSource dataSource;
 
 	/**
