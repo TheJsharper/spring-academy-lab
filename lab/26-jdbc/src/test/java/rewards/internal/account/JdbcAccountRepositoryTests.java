@@ -5,6 +5,7 @@ import common.money.Percentage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 
 import javax.sql.DataSource;
@@ -15,8 +16,8 @@ import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests the JDBC account repository with a test data source to verify data access and relational-to-object mapping
- * behavior works as expected.
+ * Tests the JDBC account repository with a test data source to verify data
+ * access and relational-to-object mapping behavior works as expected.
  */
 public class JdbcAccountRepositoryTests {
 
@@ -24,16 +25,20 @@ public class JdbcAccountRepositoryTests {
 
 	private DataSource dataSource;
 
+	private JdbcTemplate jdbcTemplate;
+
 	@BeforeEach
 	public void setUp() throws Exception {
 		dataSource = createTestDataSource();
-		repository = new JdbcAccountRepository(dataSource);
+		jdbcTemplate = new JdbcTemplate(dataSource);
+		repository = new JdbcAccountRepository(jdbcTemplate);
 	}
 
 	@Test
 	public void testFindAccountByCreditCard() {
 		Account account = repository.findByCreditCard("1234123412341234");
-		// assert the returned account contains what you expect given the state of the database
+		// assert the returned account contains what you expect given the state of the
+		// database
 		assertNotNull(account, "account should never be null");
 		assertEquals(Long.valueOf(0), account.getEntityId(), "wrong entity id");
 		assertEquals("123456789", account.getNumber(), "wrong account number");
@@ -86,10 +91,7 @@ public class JdbcAccountRepositoryTests {
 	}
 
 	private DataSource createTestDataSource() {
-		return new EmbeddedDatabaseBuilder()
-			.setName("rewards")
-			.addScript("/rewards/testdb/schema.sql")
-			.addScript("/rewards/testdb/data.sql")
-			.build();
+		return new EmbeddedDatabaseBuilder().setName("rewards").addScript("/rewards/testdb/schema.sql")
+				.addScript("/rewards/testdb/data.sql").build();
 	}
 }

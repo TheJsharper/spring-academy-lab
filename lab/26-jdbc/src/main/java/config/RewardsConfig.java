@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import rewards.RewardNetwork;
 import rewards.internal.RewardNetworkImpl;
@@ -20,31 +21,34 @@ public class RewardsConfig {
 
 	@Autowired
 	DataSource dataSource;
-		
+
 	@Bean
-	public RewardNetwork rewardNetwork(){
-		return new RewardNetworkImpl(
-			accountRepository(), 
-			restaurantRepository(), 
-			rewardRepository());
+	RewardNetwork rewardNetwork(AccountRepository accountRepository, RestaurantRepository restaurantRepository,
+			RewardRepository rewardRepository) {
+		return new RewardNetworkImpl(accountRepository, restaurantRepository, rewardRepository);
 	}
-	
+
 	@Bean
-	public AccountRepository accountRepository(){
-		JdbcAccountRepository repository = new JdbcAccountRepository(dataSource);
+	AccountRepository accountRepository(JdbcTemplate jdbcTemplate) {
+		JdbcAccountRepository repository = new JdbcAccountRepository(jdbcTemplate);
 		return repository;
 	}
-	
+
 	@Bean
-	public RestaurantRepository restaurantRepository(){
-		JdbcRestaurantRepository repository = new JdbcRestaurantRepository(dataSource);
+	RestaurantRepository restaurantRepository(JdbcTemplate jdbcTemplate) {
+		JdbcRestaurantRepository repository = new JdbcRestaurantRepository(jdbcTemplate);
 		return repository;
 	}
-	
+
 	@Bean
-	public RewardRepository rewardRepository(){
-		JdbcRewardRepository repository = new JdbcRewardRepository(dataSource);
+	RewardRepository rewardRepository(JdbcTemplate jdbcTemplate) {
+		JdbcRewardRepository repository = new JdbcRewardRepository(jdbcTemplate);
 		return repository;
 	}
-	
+
+	@Bean
+	JdbcTemplate jdbcTemplate() {
+		return new JdbcTemplate(dataSource);
+	}
+
 }
