@@ -32,10 +32,10 @@ public class Restaurant {
 	@Column(name = "ID")
 	private Long entityId;
 
-	@Column(name = "MERCHANT_NUMBER", length = 10, nullable = false)
+	@Column(name = "MERCHANT_NUMBER")
 	private String number;
 
-	@Column(name = "NAME", length = 80, nullable = false)
+	@Column(name = "NAME")
 	private String name;
 
 	// This is not a simple mapping as Percentage is not a simple type.
