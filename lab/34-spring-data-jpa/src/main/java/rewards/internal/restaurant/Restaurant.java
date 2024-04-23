@@ -1,11 +1,16 @@
 package rewards.internal.restaurant;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import common.money.MonetaryAmount;
 import common.money.Percentage;
 import rewards.Dining;
 import rewards.internal.account.Account;
-
-import javax.persistence.Transient;
 
 /**
  * Restaurants calculate how much benefit may be awarded to an account for
@@ -19,19 +24,25 @@ import javax.persistence.Transient;
 //                            NAME varchar(80) not null,
 //                            BENEFIT_PERCENTAGE decimal(5,2) not null,
 //                            BENEFIT_AVAILABILITY_POLICY varchar(1) not null, unique(MERCHANT_NUMBER));
+@Entity
+@Table(name = "T_RESTAURANT")
 public class Restaurant {
 
+	@Id
+	@Column(name = "ID")
 	private Long entityId;
 
+	@Column(name = "MERCHANT_NUMBER", length = 10, nullable = false)
 	private String number;
 
+	@Column(name = "NAME", length = 80, nullable = false)
 	private String name;
 
 	// This is not a simple mapping as Percentage is not a simple type.
-	// You need to map Percentage.value from a column in T_RESTAURANT.  If unsure,
+	// You need to map Percentage.value from a column in T_RESTAURANT. If unsure,
 	// look at how Beneficiary does it.
+	@AttributeOverride(name = "value", column = @Column(name = "BENEFIT_PERCENTAGE"))
 	private Percentage benefitPercentage;
-
 
 	// DO NOT map this field. For now it is always set to AlwaysAvailable.
 	// The bonus section later will redo this mapping.
@@ -39,16 +50,14 @@ public class Restaurant {
 	private BenefitAvailabilityPolicy benefitAvailabilityPolicy = AlwaysAvailable.INSTANCE;
 
 	public Restaurant() {
-		//Needed by the JPA spec
+		// Needed by the JPA spec
 	}
 
 	/**
 	 * Creates a new restaurant.
 	 * 
-	 * @param number
-	 *            the restaurant's merchant number
-	 * @param name
-	 *            the name of the restaurant
+	 * @param number the restaurant's merchant number
+	 * @param name   the name of the restaurant
 	 */
 	public Restaurant(String number, String name) {
 		this.number = number;
@@ -56,25 +65,21 @@ public class Restaurant {
 	}
 
 	/**
-	 * Sets the percentage benefit to be awarded for eligible dining
-	 * transactions.
+	 * Sets the percentage benefit to be awarded for eligible dining transactions.
 	 * 
-	 * @param benefitPercentage
-	 *            the benefit percentage
+	 * @param benefitPercentage the benefit percentage
 	 */
 	public void setBenefitPercentage(Percentage benefitPercentage) {
 		this.benefitPercentage = benefitPercentage;
 	}
 
 	/**
-	 * Sets the policy that determines if a dining by an account at this
-	 * restaurant is eligible for benefit.
+	 * Sets the policy that determines if a dining by an account at this restaurant
+	 * is eligible for benefit.
 	 * 
-	 * @param benefitAvailabilityPolicy
-	 *            the benefit availability policy
+	 * @param benefitAvailabilityPolicy the benefit availability policy
 	 */
-	public void setBenefitAvailabilityPolicy(
-			BenefitAvailabilityPolicy benefitAvailabilityPolicy) {
+	public void setBenefitAvailabilityPolicy(BenefitAvailabilityPolicy benefitAvailabilityPolicy) {
 		this.benefitAvailabilityPolicy = benefitAvailabilityPolicy;
 	}
 
@@ -114,13 +119,10 @@ public class Restaurant {
 	}
 
 	/**
-	 * Calculate the benefit eligible to this account for dining at this
-	 * restaurant.
+	 * Calculate the benefit eligible to this account for dining at this restaurant.
 	 * 
-	 * @param account
-	 *            the account that dined at this restaurant
-	 * @param dining
-	 *            a dining event that occurred
+	 * @param account the account that dined at this restaurant
+	 * @param dining  a dining event that occurred
 	 * @return the benefit amount eligible for reward
 	 */
 	public MonetaryAmount calculateBenefitFor(Account account, Dining dining) {
@@ -132,16 +134,15 @@ public class Restaurant {
 	}
 
 	public String toString() {
-		return "Number = '" + number + "', name = '" + name
-				+ "', benefitPercentage = " + benefitPercentage
+		return "Number = '" + number + "', name = '" + name + "', benefitPercentage = " + benefitPercentage
 				+ ", benefitAvailabilityPolicy = " + benefitAvailabilityPolicy;
 	}
 
 	// Internal methods for JPA only - hence they are protected.
 	/**
-	 * Sets this restaurant's benefit availability policy from the code stored
-	 * in the underlying column. This is a database specific accessor using the
-	 * JPA 2 @Access annotation.
+	 * Sets this restaurant's benefit availability policy from the code stored in
+	 * the underlying column. This is a database specific accessor using the JPA
+	 * 2 @Access annotation.
 	 */
 	protected void setDbBenefitAvailabilityPolicy(String policyCode) {
 		if ("A".equals(policyCode)) {
@@ -149,14 +150,13 @@ public class Restaurant {
 		} else if ("N".equals(policyCode)) {
 			benefitAvailabilityPolicy = NeverAvailable.INSTANCE;
 		} else {
-			throw new IllegalArgumentException("Not a supported policy code "
-					+ policyCode);
+			throw new IllegalArgumentException("Not a supported policy code " + policyCode);
 		}
 	}
 
 	/**
-	 * Returns this restaurant's benefit availability policy code for storage in
-	 * the underlying column. This is a database specific accessor using the JPA
+	 * Returns this restaurant's benefit availability policy code for storage in the
+	 * underlying column. This is a database specific accessor using the JPA
 	 * 2 @Access annotation.
 	 */
 	protected String getDbBenefitAvailabilityPolicy() {
@@ -165,8 +165,7 @@ public class Restaurant {
 		} else if (benefitAvailabilityPolicy == NeverAvailable.INSTANCE) {
 			return "N";
 		} else {
-			throw new IllegalArgumentException("No policy code for "
-					+ benefitAvailabilityPolicy.getClass());
+			throw new IllegalArgumentException("No policy code for " + benefitAvailabilityPolicy.getClass());
 		}
 	}
 }
