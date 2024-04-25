@@ -2,6 +2,10 @@ package accounts.web;
 
 import accounts.AccountManager;
 import common.money.Percentage;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +25,12 @@ import java.util.List;
  * A controller handling requests for CRUD operations on Accounts and their
  * Beneficiaries.
  *
- * TODO-11: Access the new "/metrics/account.fetch" metric
- * - Let the application get restarted via devtools
- * - Access "/metrics" endpoint, and verify the presence of "account.fetch" metric
- * - Access some accounts (i.e. http://localhost:8080/accounts/1)
- * - View the counter value at http://localhost:8080/actuator/metrics/account.fetch
- * - Restart the application. What happens to the counter?
+ * TODO-11: Access the new "/metrics/account.fetch" metric - Let the application
+ * get restarted via devtools - Access "/metrics" endpoint, and verify the
+ * presence of "account.fetch" metric - Access some accounts (i.e.
+ * http://localhost:8080/accounts/1) - View the counter value at
+ * http://localhost:8080/actuator/metrics/account.fetch - Restart the
+ * application. What happens to the counter?
  */
 @RestController
 public class AccountController {
@@ -35,42 +39,50 @@ public class AccountController {
 
 	private AccountManager accountManager;
 
+	private final MeterRegistry meterRegistry;
+
+	private Counter counter;
+
 	// TODO-08: Add a Micrometer Counter
 	// - Inject a MeterRegistry through constructor injection
-	//   (Modify the existing constructor below)
+	// (Modify the existing constructor below)
 	// - Create a Counter from the MeterRegistry: name the counter "account.fetch"
-	//   with a tag of "type"/"fromCode" key/value pair
-	@Autowired
-	public AccountController(AccountManager accountManager) {
+	// with a tag of "type"/"fromCode" key/value pair
+
+	public AccountController(AccountManager accountManager, MeterRegistry meterRegistry) {
 		this.accountManager = accountManager;
+		this.meterRegistry = meterRegistry;
+		this.counter = this.meterRegistry.counter("account.fetch", "type", "fromCode");
 	}
 
 	/**
 	 * Provide a list of all accounts.
 	 *
-     * TODO-12: Add Timer metric
-	 * - Add @Timed annotation to this method
-     * - Set the metric name to "account.timer"
-     * - Set a extra tag with "source"/"accountSummary" key/value pair
+	 * TODO-12: Add Timer metric - Add @Timed annotation to this method - Set the
+	 * metric name to "account.timer" - Set a extra tag with
+	 * "source"/"accountSummary" key/value pair
 	 */
 	@GetMapping(value = "/accounts")
+	@Timed(value="account.timer", extraTags = {"source", "accountSummary"})
 	public List<Account> accountSummary() {
+		logger.debug("Logging message within accountSummary()");
+		this.counter.increment();
 		return accountManager.getAllAccounts();
 	}
 
 	/**
 	 *
-	 *  TODO-09: Increment the Counter each time "accountDetails" method below is called.
-     *  - Add code to increment the counter
+	 * TODO-09: Increment the Counter each time "accountDetails" method below is
+	 * called. - Add code to increment the counter
 	 *
 	 * ----------------------------------------------------
 	 *
-     *  TODO-13: Add Timer metric
-	 *  - Add @Timed annotation to this method
-     *  - Set the metric name to "account.timer"
-     *  - Set extra tag with "source"/"accountDetails" key/value pair
+	 * TODO-13: Add Timer metric - Add @Timed annotation to this method - Set the
+	 * metric name to "account.timer" - Set extra tag with "source"/"accountDetails"
+	 * key/value pair
 	 */
 	@GetMapping(value = "/accounts/{id}")
+	@Timed(value="account.timer", extraTags = {"source", "accountDetails"})
 	public Account accountDetails(@PathVariable int id) {
 
 		return retrieveAccount(id);
@@ -83,7 +95,6 @@ public class AccountController {
 	@PostMapping(value = "/accounts")
 	public ResponseEntity<Void> createAccount(@RequestBody Account newAccount) {
 		Account account = accountManager.save(newAccount);
-
 		return entityWithLocation(account.getEntityId());
 	}
 
@@ -190,9 +201,8 @@ public class AccountController {
 	 * to be a child of the URL just received.
 	 *
 	 * Suppose we have just received an incoming URL of, say,
-	 * http://localhost:8080/accounts and resourceId is
-	 * "12345". Then the URL of the new resource will be
-	 * http://localhost:8080/accounts/12345.
+	 * http://localhost:8080/accounts and resourceId is "12345". Then the URL of the
+	 * new resource will be http://localhost:8080/accounts/12345.
 	 */
 	private ResponseEntity<Void> entityWithLocation(Object resourceId) {
 
