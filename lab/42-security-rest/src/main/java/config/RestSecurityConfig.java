@@ -4,6 +4,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.core.userdetails.User;
@@ -17,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 // - Add @EnableMethodSecurity annotation to this class
 
 @Configuration
+@EnableMethodSecurity
 public class RestSecurityConfig {
 
 	@Bean
@@ -35,33 +38,45 @@ public class RestSecurityConfig {
                 //   for all roles - "USER", "ADMIN", "SUPERADMIN"
 
                 // Deny any request that doesn't match any authorization rule
-                .anyRequest().denyAll())
+                //.anyRequest().denyAll())
+        			.requestMatchers(HttpMethod.DELETE, "/accounts/**").hasRole("SUPERADMIN")
+        			.requestMatchers(HttpMethod.POST, "/accounts/**").hasAnyRole("SUPERADMIN", "ADMIN")
+        			.requestMatchers(HttpMethod.PUT, "/accounts/**").hasAnyRole("SUPERADMIN", "ADMIN")
+        			.requestMatchers(HttpMethod.GET, "/accounts/**").hasAnyRole("SUPERADMIN", "ADMIN", "USER")
+        			.requestMatchers(HttpMethod.GET, "/authorities").hasAnyRole("SUPERADMIN", "ADMIN", "USER")
+        		.anyRequest().denyAll()
+        		)
+        		
         .httpBasic(withDefaults())
         .csrf(CsrfConfigurer::disable);
         // @formatter:on
 
-        return http.build();
+		return http.build();
 	}
 
 	// TODO-14b (Optional): Remove the InMemoryUserDetailsManager definition
 	// - Comment the @Bean annotation below
-	
-	@Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+
+	//@Bean
+	public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
 
 		// TODO-05: Add three users with corresponding roles:
 		// - "user"/"user" with "USER" role (example code is provided below)
 		// - "admin"/"admin" with "USER" and "ADMIN" roles
 		// - "superadmin"/"superadmin" with "USER", "ADMIN", and "SUPERADMIN" roles
 		// (Make sure to store the password in encoded form.)
-    	// - pass all users in the InMemoryUserDetailsManager constructor
+		// - pass all users in the InMemoryUserDetailsManager constructor
 		UserDetails user = User.withUsername("user").password(passwordEncoder.encode("user")).roles("USER").build();
+		UserDetails admin = User.withUsername("admin").password(passwordEncoder.encode("admin")).roles("USER", "ADMIN")
+				.build();
+		UserDetails superAdmin = User.withUsername("superadmin").password(passwordEncoder.encode("superadmin"))
+				.roles("USER", "ADMIN", "SUPERADMIN").build();
 
-		return new InMemoryUserDetailsManager(user /* Add new users comma-separated here */);
+		return new InMemoryUserDetailsManager(user, admin, superAdmin);
 	}
-    
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-    	return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
+
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+	}
 }
