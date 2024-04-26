@@ -66,7 +66,7 @@ public class AccountController {
 	@Timed(value="account.timer", extraTags = {"source", "accountSummary"})
 	public List<Account> accountSummary() {
 		logger.debug("Logging message within accountSummary()");
-		this.counter.increment();
+		//this.counter.increment();
 		return accountManager.getAllAccounts();
 	}
 
@@ -84,7 +84,7 @@ public class AccountController {
 	@GetMapping(value = "/accounts/{id}")
 	@Timed(value="account.timer", extraTags = {"source", "accountDetails"})
 	public Account accountDetails(@PathVariable int id) {
-
+		this.counter.increment();
 		return retrieveAccount(id);
 	}
 
